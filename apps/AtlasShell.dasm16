@@ -439,6 +439,7 @@
 	SET PUSH, Y
 	JSR [0x101F]
 	JSR [0x102A]
+	ADD A, 1
 	SET X, [A]
 	SET Y, 0
 	ADD A, 1
@@ -446,14 +447,14 @@
 	IFE Y, X
 		SET PC, command_lsf_end
 	ADD Y, 1
-	
+
 	SET PUSH, A
 	SET C, [A] ; Ignore the directory value for now, will be finished later
 	SET A, [present_working_directory]
 	IFN C, A
 		SET PC, command_lsf_skip_file
 	SET A, POP
-	
+
 	; Clear out the row buffer
 	SET C, command_ls_row
 	ADD C, 32
@@ -464,30 +465,30 @@
 	IFN B, C
 		SET PC, command_lsf_clearrow
 	SET B, command_ls_row
-	
+
 	ADD A, 1 ; Move on to flags
-	
+
 	; Store if this file can be read
 	SET C, [A]
 	AND C, 0x0001
 	IFE C, 1
 		SET [B], 0x52 ; 'R'
 	ADD B, 1
-	
+
 	; Store if this file can be written to
 	SET C, [A]
 	AND C, 0x0002
 	IFE C, 2
 		SET [B], 0x57 ; 'W'
 	ADD B, 1
-	
+
 	; Store if this file is executable
 	SET C, [A]
 	AND C, 0x0008
 	IFE C, 8
 		SET [B], 0x45 ; 'E'
 	ADD B, 1
-	
+
 	; Check if the file is hidden
 	SET C, [A]
 	AND C, 0x0004
@@ -504,48 +505,37 @@
 	; Add separator
 	SET [B], 0x7C ; '|'
 	ADD B, 1
-	ADD A, 1
-	
+
 	; Store the file name
 	JSR [0x1017]
 	ADD B, 16
-	ADD A, 16
-	
+	ADD A, 17
+
 	; Add separator
 	SET [B], 0x7C ; '|'
 	ADD B, 1
-	;ADD A, 1
-	
+
 	IFE C, 16
 		SET PC, command_lsf_skip_filesize
-	
+
 	; Display file size
-	SET PUSH, C
-	SET C, [A] ; Get the file start
-	ADD A, 1
 	SET PUSH, A
+	SET PUSH, C
 	SET PUSH, B
-	SET A, [A]
-	SUB A, C
-	SET B, command_number_buffer
-	SET C, 10 ; radix
-	JSR [0x101B] ; itoa
-	SET A, 5
-:command_lsf_filesize_sanitize
-	IFE [B], 0
-		SET [B], 32
-	ADD B, 1
-	SUB A, 1
-	IFN A, 0
-		SET PC, command_lsf_filesize_sanitize
-	SET A, command_number_buffer
-	SET B, PEEK
-	SET C, 5
-	JSR [0x1018] ; strncpy
 	
+	SET A, [A]
+	SET B, command_number_buffer
+	SET C, 10
+	JSR [0x101B]
+	
+	SET A, command_number_buffer
 	SET B, POP
-	SET A, POP
+	SET C, 5
+	JSR [0x1018]
+	
 	SET C, POP
+	SET A, POP
+	
 :command_lsf_skip_filesize	
 	IFE C, 16
 		ADD A, 1
@@ -559,10 +549,11 @@
 	SET A, POP
 	ADD A, 19
 :command_lsf_skip_file_end
-	
+
 	; Move on to the next entry
 	ADD A, 1
 	SET PC, command_lsf_loop
+
 :command_lsf_end
 	;JSR [0x1002]
 	SET Y, POP
