@@ -82,11 +82,11 @@ SET I, 0 ;21
 	ADD C, I
 	ADD B, [C + 1]
 	SET C, POP
-	SET PC, :virtual_filesystem_getfiledatastart_loop
+	SET PC, virtual_filesystem_getfiledatastart_loop
 
 :virtual_filesystem_getfiledatastart_skip_word
 	ADD B, 1
-	SET PC, :virtual_filesystem_getfiledatastart_loop
+	SET PC, virtual_filesystem_getfiledatastart_loop
 
 :virtual_filesystem_getfiledatastart_file_found
 	SET A, B
